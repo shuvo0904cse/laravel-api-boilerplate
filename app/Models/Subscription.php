@@ -16,12 +16,13 @@ class Subscription extends Model
     ];
     
     /**
-     * Check Email Address
+     * Check Subscribed Email Address
      */
-    public function checkEmailAddress($email)
+    public function checkSubscribedEmailAddress($email)
     {
         return self::query()
                 ->where("email", $email)
+                ->where("is_subscribed", true)
                 ->first();
     }
 

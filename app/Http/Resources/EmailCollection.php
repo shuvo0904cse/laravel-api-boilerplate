@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class SubscriptionCollection extends ResourceCollection
+class EmailCollection extends ResourceCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -14,6 +14,6 @@ class SubscriptionCollection extends ResourceCollection
      */
     public function toArray($request)
     {
-        return SubscriptionResource::collection($this->collection);
+        return EmailResource::collection($this->collection);
     }
 }

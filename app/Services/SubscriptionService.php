@@ -4,6 +4,8 @@ namespace App\Services;
 use App\Helpers\Message;
 use App\Http\Resources\RoleCollection;
 use App\Http\Resources\SubscriptionCollection;
+use App\Http\Resources\SubscriptionResource;
+use App\Http\Resources\UnsubscriptionResource;
 use App\Jobs\SubscribeMail;
 use App\Jobs\SubscriptionMail;
 use App\Jobs\UnsubscribeMail;
@@ -47,12 +49,12 @@ class SubscriptionService
     public function subscribe($request){
         try{
             //store
-            $subscribe = $this->store($request);
-
+            $subscribe = $this->storeSubscribe($request);
+            
             //subscribe mail
             SubscriptionMail::dispatch($subscribe);
 
-            return Message::jsonResponse($subscribe);
+            return Message::jsonResponse(new SubscriptionResource($subscribe));
         }catch(Exception $ex){
            Message::throwException($ex);
         }
@@ -62,46 +64,43 @@ class SubscriptionService
      * un subscribe
      */
     public function unsubscribe($request){
-        $email = $this->subscription()->checkEmailAddress($request->email);
-        if(empty($email)) Message::throwExceptionMessage(trans("message.email_not_exists"));
+        $unsubscribeEmail = $this->subscription()->checkSubscribedEmailAddress($request['email']);
+        if(empty($unsubscribeEmail)) Message::throwExceptionMessage(trans("message.email_not_exists"));
         
         try{
-             //store
-             $subscribe = $this->store($request);
+             //Delete Subscribed Email
+             $this->deleteSubscribedEmail($unsubscribeEmail->id);
 
              //unsubscribe mail
-             UnSubscriptionMail::dispatch($subscribe);
+             UnSubscriptionMail::dispatch($unsubscribeEmail);
 
             //un subscribe mail
-            return Message::jsonResponse($subscribe);
+            return Message::jsonResponse(new UnsubscriptionResource($unsubscribeEmail));
         }catch(Exception $ex){
            Message::throwException($ex);
         }
     }
 
     /**
-     * store
+     * store Subscribe
      */
-    public function store($request){
+    public function storeSubscribe($request){
         try{
             $subscribe = $this->subscription()->create([
                 "email" => $request['email']
             ]);
-            return Message::jsonResponse($subscribe);
+            return $subscribe;
         }catch(Exception $ex){
            Message::throwException($ex);
         }
     }
     
     /**
-     * update
+     * update UnSubscribe
      */
-    public function update($request, $roleId){
+    public function deleteSubscribedEmail($subscriptionId){
         try{
-            $role = $this->role()->where("id", $roleId)->update([
-                "name"  => $request['name']
-            ]);
-            return Message::jsonResponse($role);
+            return $this->subscription()->where("id", $subscriptionId)->delete();
         }catch(Exception $ex){
            Message::throwException($ex);
         }

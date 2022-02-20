@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class UserPermissionRequest extends BaseRequest
+class EmailUploadRequest extends BaseRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -14,7 +12,7 @@ class UserPermissionRequest extends BaseRequest
     public function rules()
     {
         return [
-           // 'permissions' => ['array']
+            'file' => ['required', 'mimes:csv,txt'],
         ];
     }
 }

@@ -2,26 +2,26 @@
 
 namespace App\Mail;
 
-use App\Models\Subscription;
+use App\Models\Contact;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class UnSubscriptionMail extends Mailable implements ShouldQueue
+class ContactConfirmation extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $unSubscription;
+    public $contact;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(Subscription $unSubscription)
+    public function __construct(Contact $contact)
     {
-        $this->unSubscription = $unSubscription;
+        $this->contact = $contact;
     }
 
     /**
@@ -31,8 +31,8 @@ class UnSubscriptionMail extends Mailable implements ShouldQueue
      */
     public function build()
     {
-        return $this->subject('Subscription')
-                    ->markdown('emails.unSubscriptionMail')
-                    ->with('subscription', $this->unSubscription);
+        return $this->subject('Contact')
+                    ->markdown('emails.contactConfirmation')
+                    ->with('contact', $this->contact);
     }
 }

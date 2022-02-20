@@ -2,9 +2,13 @@
 namespace App\Services;
 
 use App\Helpers\Message;
+use App\Http\Resources\EmailCollection;
 use App\Http\Resources\RoleCollection;
+use App\Jobs\EmailCsvProcess;
+use App\Models\Email;
 use App\Models\Role;
 use Exception;
+use Illuminate\Support\Facades\Bus;
 
 class EmailService
 {
@@ -17,20 +21,19 @@ class EmailService
             $filter = [
                 "is_paginate"  => true,
                 "search"       => [
-                    "fields"   => ['id', 'name'],
+                    "fields"   => ['id', 'name', 'email'],
                     "value"    => isset($request['search']) ? $request['search'] : null
-                ],
-                "relation" => ['permissions']
+                ]
             ];
-
+            
             //lists
-            $roles = $this->role()->lists($filter);
+            $emails = $this->email()->lists($filter);
 
             //custom paginate
-            $role = $this->role()->pagination(new RoleCollection($roles->items()), $roles);
+            $email = $this->email()->pagination(new EmailCollection($emails->items()), $emails);
 
             //json response
-            return Message::jsonResponse($role);
+            return Message::jsonResponse($email);
         }catch(Exception $ex){
            Message::throwException($ex);
         }
@@ -41,13 +44,11 @@ class EmailService
      */
     public function store($request){
         try{
-            $role = $this->role()->create([
+            return $this->email()->create([
                 "name" => $request['name'],
-                "type" => config("settings.role_optional")
+                "email" => $request['email']
             ]);
-            return Message::jsonResponse($role);
         }catch(Exception $ex){
-            dd($ex->getMessage());
            Message::throwException($ex);
         }
     }
@@ -55,12 +56,12 @@ class EmailService
     /**
      * update
      */
-    public function update($request, $roleId){
+    public function update($request, $emailId){
         try{
-            $role = $this->role()->where("id", $roleId)->update([
-                "name"  => $request['name']
+            return $this->email()->where("id", $emailId)->update([
+                "name" => $request['name'],
+                "email" => $request['email']
             ]);
-            return Message::jsonResponse($role);
         }catch(Exception $ex){
            Message::throwException($ex);
         }
@@ -69,9 +70,9 @@ class EmailService
     /**
      * delete
      */
-    public function delete($role){
+    public function delete($email){
         try{
-            return $role->delete();
+            return $email->delete();
         }catch(Exception $ex){
            Message::throwException($ex);
         }
@@ -80,17 +81,38 @@ class EmailService
     /**
      * assign permission
      */
-    public function assignPermission($permissions, $role){
+    public function upload($file){
         try{
-            return $role->permissions()->sync($permissions);
+           //get file
+           $data = file($file);
+
+           // Chunking file
+           $chunks = array_chunk($data, 500);
+           
+           //Bus batching
+           $header = [];
+           $newBatch  = Bus::batch([])->dispatch();
+           
+           foreach ($chunks as $key => $chunk) {
+               $data = array_map('str_getcsv', $chunk);
+               
+               if ($key === 0) {
+                   $header = $data[0];
+                   unset($data[0]);
+               }
+               
+               //email csv process and add in bus batch
+               $newBatch->add(new EmailCsvProcess($data, $header));
+           }
+           return $newBatch;
         }catch(Exception $ex){
            Message::throwException($ex);
         }
     }
 
 
-    public function role()
+    public function email()
     {
-        return new Role();
+        return new Email();
     }
 }

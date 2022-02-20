@@ -20,8 +20,8 @@ class UserResource extends JsonResource
             "last_name"     => $this->last_name,
             "email"         => $this->email,
             "user_details"  => UserDetailResource::make($this->userDetail),
-            "roles"         => RoleCollection::collection(RoleResource::make($this->roles)),
-            //"permissions"   => PermissionResource::make($this->permissions)
+            "roles"         => UserRoleDetailsResource::collection($this->roles),
+            "permissions"   => UserPermissionDetailsResource::collection($this->permissions)
         ];
     }
 }

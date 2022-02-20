@@ -19,8 +19,8 @@ class UserController extends Controller
     public function index(Request $request)
     {
         try{
-            $role = $this->userService()->lists($request->all());
-            return Message::successMessage(trans("message.execute_successfully"), $role->getData());
+            $user = $this->userService()->lists($request->all());
+            return Message::successMessage(trans("message.execute_successfully"), $user->getData());
         }catch(Exception $ex){
             return Message::errorMessage($ex->getMessage());
         }
@@ -32,8 +32,8 @@ class UserController extends Controller
     public function store(UserRequest $request)
     {
         try{
-            $role = $this->userService()->store($request->all());
-            return Message::successMessage(trans("message.save_successfully"), $role->getData());
+            $user = $this->userService()->store($request->all());
+            return Message::successMessage(trans("message.save_successfully"), $user->getData());
         }catch(Exception $ex){
             return Message::errorMessage($ex->getMessage());
         }
@@ -45,8 +45,8 @@ class UserController extends Controller
     public function update(UserRequest $request, User $user)
     {
         try{
-            $role = $this->userService()->update($request->all(), $user->id);
-            return Message::successMessage(trans("message.update_successfully"), $role->getData());
+            $user = $this->userService()->update($request->all(), $user);
+            return Message::successMessage(trans("message.update_successfully"), $user->getData());
         }catch(Exception $ex){
             return Message::errorMessage($ex->getMessage());
         }

@@ -70,6 +70,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Permission::class, 'users_permissions', 'user_id', 'permission_id');
     }
 
+    public function magicLogin()
+    {
+        return $this->hasMany(MagicLoginToken::class);
+    }
+
     public function getFullNameAttribute(){
         return $this->attributes['full_name'] = $this->attributes['first_name']." ".$this->attributes['last_name'];
     }

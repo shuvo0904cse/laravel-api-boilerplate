@@ -16,11 +16,6 @@ class SubscriptionRequest extends BaseRequest
             'email' => ['required', 'email', 'unique:subscriptions'],
         ];
 
-        if (in_array($this->method(), ['PUT', 'PATCH'])) {
-            $subscription['email'] = ['required', 'email'];
-        }
-
         return $subscription;
-
     }
 }

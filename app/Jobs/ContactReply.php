@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Mail\UnSubscriptionMail as MailUnSubscriptionMail;
-use App\Models\Subscription;
+use App\Mail\ContactReply as MailContactReply;
+use App\Models\Contact;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,20 +12,20 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 
-class UnSubscriptionMail implements ShouldQueue
+class ContactReply implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $unSubscription;
+    public $contact;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct(Subscription $unSubscription)
+    public function __construct(Contact $contact)
     {
-        $this->unSubscription = $unSubscription;
+        $this->contact = $contact;
     }
 
     /**
@@ -35,6 +35,6 @@ class UnSubscriptionMail implements ShouldQueue
      */
     public function handle()
     {
-        Mail::to($this->unSubscription->email)->send(new MailUnSubscriptionMail($this->unSubscription));
+        Mail::to($this->contact->email)->send(new MailContactReply($this->contact));
     }
 }

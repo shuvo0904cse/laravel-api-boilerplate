@@ -2,7 +2,12 @@
 namespace App\Services;
 
 use App\Helpers\Message;
+use App\Http\Resources\ContactCollection;
+use App\Http\Resources\ContactResource;
 use App\Http\Resources\RoleCollection;
+use App\Jobs\ContactConfirmation;
+use App\Jobs\ContactReply;
+use App\Models\Contact;
 use App\Models\Role;
 use Exception;
 
@@ -17,50 +22,19 @@ class ContactService
             $filter = [
                 "is_paginate"  => true,
                 "search"       => [
-                    "fields"   => ['id', 'name'],
+                    "fields"   => ['id', 'first_name', 'last_name', 'email', 'subject', 'message'],
                     "value"    => isset($request['search']) ? $request['search'] : null
-                ],
-                "relation" => ['permissions']
+                ]
             ];
 
             //lists
-            $roles = $this->role()->lists($filter);
+            $contacts = $this->contactModel()->lists($filter);
 
             //custom paginate
-            $role = $this->role()->pagination(new RoleCollection($roles->items()), $roles);
+            $contact = $this->contactModel()->pagination(new ContactCollection($contacts->items()), $contacts);
 
             //json response
-            return Message::jsonResponse($role);
-        }catch(Exception $ex){
-           Message::throwException($ex);
-        }
-    }
-
-    /**
-     * store
-     */
-    public function store($request){
-        try{
-            $role = $this->role()->create([
-                "name" => $request['name'],
-                "type" => config("settings.role_optional")
-            ]);
-            return Message::jsonResponse($role);
-        }catch(Exception $ex){
-            dd($ex->getMessage());
-           Message::throwException($ex);
-        }
-    }
-    
-    /**
-     * update
-     */
-    public function update($request, $roleId){
-        try{
-            $role = $this->role()->where("id", $roleId)->update([
-                "name"  => $request['name']
-            ]);
-            return Message::jsonResponse($role);
+            return Message::jsonResponse($contact);
         }catch(Exception $ex){
            Message::throwException($ex);
         }
@@ -69,28 +43,54 @@ class ContactService
     /**
      * delete
      */
-    public function delete($role){
+    public function delete($contact){
         try{
-            return $role->delete();
+            return $contact->delete();
         }catch(Exception $ex){
            Message::throwException($ex);
         }
     }
 
     /**
-     * assign permission
+     * contact
      */
-    public function assignPermission($permissions, $role){
+    public function contact($request){
         try{
-            return $role->permissions()->sync($permissions);
+            //store contact
+            $contact = $this->storeContact($request);
+
+            //send confirmation mail
+            ContactConfirmation::dispatch($contact);
+
+            //send reply mail
+            ContactReply::dispatch($contact);
+  
+            return Message::jsonResponse(new ContactResource($contact));
+        }catch(Exception $ex){
+           Message::throwException($ex);
+        }
+    }
+
+    /**
+     * Store Contact
+     */
+    public function storeContact($request){
+        try{
+            return $this->contactModel()->create([
+                "first_name"    => $request['first_name'],
+                "last_name"     => $request['last_name'],
+                "email"         => $request['email'],
+                "subject"       => $request['subject'],
+                "message"       => $request['message']
+            ]);
         }catch(Exception $ex){
            Message::throwException($ex);
         }
     }
 
 
-    public function role()
+    public function contactModel()
     {
-        return new Role();
+        return new Contact();
     }
 }

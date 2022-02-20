@@ -26,9 +26,6 @@ class Message
         $message = trans("message.400");
         if(!is_string($exception)){
             $message = $exception->getMessage();
-            if($exception->getCode() == 0){
-                $message = trans("message.400");
-            }
         } else {
             $message = $exception;
         }
